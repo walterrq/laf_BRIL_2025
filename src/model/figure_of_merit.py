@@ -15,34 +15,23 @@ class Processor:
         #print(mount_path)
 
     def __call__(self, 
-                 parquets_path: str,
+                 pickles_path: str,
                  fill_number: str,
                  year: int = 2023) -> Any:
         """
-        Runs the pipeline
-
+        Executes the pipeline with the specified parameters.
+    
         Args:
-            fill_number (int): Fill number
-            save_path (str, optional): Where to save the output.
-                Defaults to None.
-            subsample (int, optional): Subsample rate, in seconds for the data,
-                A larger subsample rate will make the pipeline run faster,
-                but the results will be less granular.
-                Defaults to 5.
-            return_preprocessed (bool, optional): If True, returns the
-                preprocessed step for visualization. Defaults to False.
-            verbose (bool, optional): If True, prints the output
-                Defaults to False.
-            generate_plots (bool, optional): If True, generates plots for each
-                one of the channels and with preprocessing data.
-                Defaults to False.
-
+            pickles_path (str): Path to the directory or file containing the pickles data.
+            fill_number (str): Identifier for the specific fill number to process.
+            year (int, optional): The year associated with the data. Defaults to 2023.
+    
         Returns:
-            Any: Output of the pipeline
+            Any: The output of the pipeline, depending on its implementation.
         """
         self.year = year
         self.fill_number = fill_number
-        attrs, rates_df = read_fill(Path(parquets_path), 
+        attrs, rates_df = read_fill(Path(pickles_path), 
                                     fill_number, 
                                     "plt", 
                                     remove_scans=True, 
@@ -164,7 +153,7 @@ class Processor:
         ax[1].set_ylabel('Norm. Processed diff.')
         ax[1].set_xlabel(None)
 
-        save_path = f'/eos/user/t/tatehort/pylaf/laf_2p0/results/{self.year}/{self.fill_number}'
+        save_path = f'results/{self.year}/{self.fill_number}'
         if not os.path.exists(save_path):
             os.makedirs(save_path)
         plt.savefig(f"{save_path}/fill_{self.fill_number}.png")
