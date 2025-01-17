@@ -18,4 +18,4 @@ In order to use this tool, run the `runner_laf.py` like this:
 python runner_laf.py --pickles_path <path/to/the/pickle/files> --fill_number <number_of_the_fill_in_the_given_path>
 ```
 
-The output plot will be stored in 
+The output plot will be stored in the folder `results` with the fill number.
