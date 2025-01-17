@@ -10,24 +10,20 @@ from pathlib import Path
 from model.preprocessor import DifferencePreprocessor
 from model.figure_of_merit import Processor
 
-def main():
-    parser = argparse.ArgumentParser(description="Run the Processor with given pickles_path and fill_number.")
-    parser.add_argument("pickles_path", 
-                        type=str, 
-                        default="/eos/user/t/tatehort/pylaf/laf/src/example_8880",
-                        help="Path to the pickles directory.")
-    parser.add_argument("fill_number", 
-                        type=int, 
-                        default=8880,
-                        help="Fill number to process.")
 
-    args = parser.parse_args()
+parser = argparse.ArgumentParser(description="Run the Processor with given pickles_path and fill_number.")
+parser.add_argument("--path", 
+                    type=str,
+                    help="Path to the pickles directory.")
+parser.add_argument("--fill", 
+                    type=int, 
+                    help="Fill number to process.")
 
-    pickles_path = args.pickles_path
-    fill_number = args.fill_number
+args = parser.parse_args()
 
-    searcher = Processor()
-    searcher(pickles_path, fill_number)
+pickles_path = args.path
+fill_number = args.fill
 
-if __name__ == "__main__":
-    main()
+searcher = Processor()
+searcher(pickles_path, fill_number)
+
