@@ -37,11 +37,7 @@ class Processor:
                                     remove_scans=True, 
                                     index_filter=(0.05,0.95))
         
-        rates_df.drop(columns = ['avgraw_plt0', 'avgraw_plt1', 'avgraw_plt2',
-                                 'avgraw_plt3', 'avgraw_plt4', 'avgraw_plt5', 'avgraw_plt6',
-                                 'avgraw_plt7', 'avgraw_plt8', 'avgraw_plt9', 'avgraw_plt10',
-                                 'avgraw_plt11', 'avgraw_plt12', 'avgraw_plt13', 'avgraw_plt14',
-                                 'avgraw_plt15', 'run', 'lsnum'], 
+        rates_df.drop(columns = ['run', 'lsnum'], 
                       inplace = True)
         
         rates_df = rates_df.dropna()
