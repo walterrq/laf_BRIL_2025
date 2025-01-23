@@ -8,6 +8,7 @@ from queue import Queue
 from tqdm import tqdm
 from tables.exceptions import NoSuchNodeError
 
+import pickle
 import numpy as np
 import pandas as pd
 import tables as tb
@@ -73,14 +74,19 @@ class MuProcessor(HD5Processor):
             thread.join()
 
         if buffer:
-            dataframe = self.extension.build_dataframe(buffer)
-            dataframe.attrs["nbx"] = nbx
-            dataframe.attrs["bxmask"] = bxmask
-            dataframe.attrs["node"] = self.node_path
-            dataframe.attrs["tag"] = ctx.tag
-            dataframe.attrs["ls_mask"] = ls_query
-            
-            dataframe.to_pickle(self.output_folder / f"{ctx.fill}_{ctx.run}.pickle")
+            result = (
+                self.extension.build_dataframe(buffer),
+                {
+                   "nbx": nbx,
+                   "bxmask": bxmask,
+                   "node": self.node_path,
+                   "tag": ctx.tag,
+                   "ls_mask": ls_query
+                }
+            )
+
+            with open(self.output_folder / f"{ctx.fill}_{ctx.run}.pickle", "wb") as fp:
+                pickle.dump(result, fp)
         else:
             print(f"Fill: {ctx.fill} Run: {ctx.run} no data found for '{self.node_path}'.")
 

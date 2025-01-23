@@ -1,6 +1,7 @@
 from typing import Any, Tuple, Dict, List
 from pathlib import Path
 
+import pickle
 import numpy as np
 import pandas as pd
 
@@ -14,7 +15,6 @@ def read_fill(
     agg_per_ls: bool = False,
     perform_ls_query: bool = False,
     remove_scans: bool = False,
-    year: str = "2023",
     index_filter: Tuple[int, int] = (0, 1)
 ) -> Tuple[Dict[str, Any], pd.DataFrame]:
     files = path.glob(f"{fill}*.pickle")
@@ -22,14 +22,12 @@ def read_fill(
     dfs: List[pd.DataFrame] = []
     for file in files:
         run = int(file.stem.split("_")[1])
-        df: pd.DataFrame = pd.read_pickle(file)
-
-        nbx = df.attrs["nbx"]
-        bxmask = df.attrs["bxmask"]
-        del df.attrs["bxmask"]
+        with open(file, "rb") as fp:
+            data: Tuple[pd.DataFrame, Dict[str, Any]] = pickle.load(fp)
+            df, attrs = data
 
         if perform_ls_query:
-            df = df.query(df.attrs["ls_mask"])
+            df = df.query(attrs["ls_mask"])
 
         df.insert(0, "run", run)
         dfs.append(df)
@@ -41,8 +39,8 @@ def read_fill(
     attrs = {
         "fill": fill,
         "name": name,
-        "nbx": nbx,
-        "bxmask": bxmask,
+        "nbx": attrs["nbx"],
+        "bxmask": attrs["bxmask"],
     }
     
     if remove_scans:
