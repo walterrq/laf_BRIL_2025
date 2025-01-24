@@ -9,7 +9,7 @@ The tool is thought to be used at CERN lxplus at the `eos` space. It's highly re
 
 ```
 python3.9 -m venv <name_of_the_environment>
-cd venv <name_of_the_environment>
+cd <name_of_the_environment>
 source bin/activate
 ./bin/python3 -m pip install --upgrade pip
 git clone https://github.com/tomasate/laf_BRIL_2025.git
