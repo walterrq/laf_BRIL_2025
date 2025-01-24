@@ -14,4 +14,4 @@ class Singleton(type):
 
 @dataclass
 class PoggerOptions(metaclass=Singleton):
-    vdm_path: Path = Path("/brildata/vdmdata23/")
+    vdm_path: Path = Path("/eos/cms/store/group/dpg_bril/comm_bril/vdmdata/2023/original/")
