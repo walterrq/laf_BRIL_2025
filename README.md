@@ -2,9 +2,22 @@
 
 Repository of the anomaly finder of the PLT.
 
-## Instructions
 
-If it's the first time you use the laf tool make sure you install the requirement libraries. The requirements are the same as for [PLT Offline Repo](https://github.com/cmsplt/PLTOffline), so is highly recommended to install the mentioned repo first, and then this one, the laf_BRIL_2025. The instructions to install the PLTOffline can be found in the [laf document](https://docs.google.com/document/d/1jXkUQ4Mt5PFmiV5IuQkr71Nw3jQUUcfnVggKCsIzocM/edit?tab=t.0)
+## Requirements
+
+The tool is thought to be used at CERN lxplus at the `eos` space. It's highly recommended to use a vitual envionment due to the specific version of the modules needed. To install the tool from the scratch with a virtual environment do:
+
+```
+python3.9 -m venv <name_of_the_environment>
+cd venv <name_of_the_environment>
+source bin/activate
+./bin/python3 -m pip install --upgrade pip
+git clone https://github.com/tomasate/laf_BRIL_2025.git
+cd laf_BRIL_2025/
+pip install -r requirements.txt
+```
+
+## Instructions
 
 This tool requires pickle files output from [NonLinearity/poggers](https://gitlab.cern.ch/flpereir/nonlinearity/-/tree/master/poggers?ref_type=heads). 
 
@@ -14,4 +27,4 @@ In order to use this tool, run the `runner_laf.py` like this:
 python runner_laf.py --path <path/to/the/pickle/files> --fill <number_of_the_fill_in_the_given_path>
 ```
 
-The output plot will be stored in the folder `results` with the fill number.
+The output plot will be stored in the folder `src/results` with the fill number.
