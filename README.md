@@ -4,7 +4,7 @@ Repository of the anomaly finder of the PLT.
 
 ## Instructions
 
-If it's the first time you use the laf tool make sure you install the requirement libraries. The requirements are the same as for [PLT Offline Repo](https://github.com/cmsplt/PLTOffline), so is highly recommended to install the mentioned repo first, and then this one, le laf_BRIL_2025. The instructions to install the PLTOffline can be found in the [laf document](https://docs.google.com/document/d/1jXkUQ4Mt5PFmiV5IuQkr71Nw3jQUUcfnVggKCsIzocM/edit?tab=t.0)
+If it's the first time you use the laf tool make sure you install the requirement libraries. The requirements are the same as for [PLT Offline Repo](https://github.com/cmsplt/PLTOffline), so is highly recommended to install the mentioned repo first, and then this one, the laf_BRIL_2025. The instructions to install the PLTOffline can be found in the [laf document](https://docs.google.com/document/d/1jXkUQ4Mt5PFmiV5IuQkr71Nw3jQUUcfnVggKCsIzocM/edit?tab=t.0)
 
 This tool requires pickle files output from [NonLinearity/poggers](https://gitlab.cern.ch/flpereir/nonlinearity/-/tree/master/poggers?ref_type=heads). 
 
