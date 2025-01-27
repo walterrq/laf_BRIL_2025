@@ -24,7 +24,7 @@ This tool requires pickle files output from [NonLinearity/poggers](https://gitla
 In order to use this tool, run the `runner_laf.py` like this:
 
 ```
-python runner_laf.py --path <path/to/the/pickle/files> --fill <number_of_the_fill_in_the_given_path>
+python runner_laf.py --path <path/to/the/pickle/files> --fill <number_of_the_fill_in_the_given_path> --year <year_of_the_fill> --out <output/path>
 ```
 
-The output plot will be stored in the folder `src/results` with the fill number.
+The output plot will be stored in the folder `src/results/<year>` with the fill number.

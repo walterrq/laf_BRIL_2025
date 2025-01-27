@@ -18,12 +18,21 @@ parser.add_argument("--path",
 parser.add_argument("--fill", 
                     type=int, 
                     help="Fill number to process.")
+parser.add_argument("--year",
+                    type=int,
+                    help="Year of the fill to be analyzed")
+parser.add_argument("--out",
+                    type=str,
+                    default='.',
+                    help="Output directory")
 
 args = parser.parse_args()
 
 pickles_path = args.path
 fill_number = args.fill
+year = args.year
+output_path = args.out
 
 searcher = Processor()
-searcher(pickles_path, fill_number)
+searcher(pickles_path, fill_number, year, output_path)
 
