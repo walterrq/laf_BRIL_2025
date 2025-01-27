@@ -8,7 +8,7 @@ Repository of the anomaly finder of the PLT.
 The tool is thought to be used at CERN lxplus at the `eos` space. It's highly recommended to use a vitual envionment due to the specific version of the modules needed. To install the tool from the scratch with a virtual environment do:
 
 ```
-python3.9 -m venv <name_of_the_environment>
+python3.10 -m venv <name_of_the_environment>
 cd <name_of_the_environment>
 source bin/activate
 ./bin/python3 -m pip install --upgrade pip

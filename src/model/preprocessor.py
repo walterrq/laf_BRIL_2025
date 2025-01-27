@@ -61,7 +61,10 @@ class DifferencePreprocessor:
 
     def _scale_df(self, df: pd.DataFrame, target_cols):
         ndf = df.copy()
-        X_vals = self.scaler.fit_transform(df[target_cols])
+        # Ensure all column names are strings
+        ndf.columns = ndf.columns.astype(str)
+        target_cols = [str(col) for col in target_cols]  # Convert target_cols to strings
+        X_vals = self.scaler.fit_transform(ndf[target_cols])
         ndf[target_cols] = X_vals
         return torch.FloatTensor(ndf[target_cols].values)
 
