@@ -11,18 +11,20 @@ from model.preprocessor import DifferencePreprocessor
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
 from poggers.options import PoggerOptions
+from adtk.detector import LevelShiftAD
 
 
 class Processor:
     def __init__(self):
         self.preprocessor = DifferencePreprocessor()
-        #print(mount_path)
-
+        
     def __call__(self, 
-                 pickles_path: str,
-                 fill_number: str,
-                 year: int = 2023,
-                 store_path: str = '.') -> Any:
+                     pickles_path: str,
+                     fill_number: str,
+                     year: int = 2023,
+                     #columns: list[int] = [i for i in range(16)],
+                     get_ratio: bool = False,
+                     store_path: str = '.') -> Any:
         """
         Executes the pipeline with the specified parameters.
     
@@ -36,44 +38,112 @@ class Processor:
         Returns:
             Any: The output of the pipeline, depending on its implementation.
         """
+        #Set the year and the fill number as an attribute
         self.year = year
         PoggerOptions().vdm_path = Path(f"/eos/cms/store/group/dpg_bril/comm_bril/{self.year}/vdm/")
         self.fill_number = fill_number
+
+        #Create the store path in case that it doesn't exist
+        save_path = f'{store_path}/results/{self.year}'
+        if not os.path.exists(save_path):
+            os.makedirs(f"{save_path}/plots")
+            os.makedirs(f"{save_path}/reports")
         
-        
+        #Read the fill from the pickle files
         attrs, rates_df = read_fill(Path(pickles_path), 
                                     fill_number, 
-                                    "plt", 
+                                    "plt",
+                                    agg_per_ls=True,
                                     remove_scans=True, 
                                     index_filter=(0.05,0.95))
-        
+
+        #Remove non-desired columns, drop na, and set the time as index
         rates_df.drop(columns = ['run', 'lsnum'], 
                       inplace = True)
-        
         rates_df = rates_df.dropna()
         rates_df.time = pd.to_datetime(rates_df.time, unit = 's')
         rates_df.set_index('time', inplace = True)
         rates_df.index.name = None
         rates_df.columns = [i for i in range(16)]
+        rates_df_original = rates_df.copy()
         
+        #Create dictionary attribute with the information of anomalous channels 
+        self.channels_dict = {i : True for i in range(16)} #True if the channel is non anomalous
+        if self.year > 2022:
+            self.channels_dict[6] = False
+            self.channels_dict[8] = False
+            self.channels_dict[9] = False
+            self.channels_dict[13] = False
+            #rates_df.drop(columns = [6, 8, 9, 13], inplace = True)
+        
+        #look for not shifted channels in the luminosity
+        channels = self.get_not_shifted_channels(rates_df)
+
+        #for ch in 
+        
+        #condition punctual, non-explained spikes in fill 7921
         if fill_number == 7921:
             rates_df = rates_df[np.sum(rates_df, axis = 1) < 11]
-            
-        preprocessed_df = self.preprocess_data(rates_df)
-        scaler = StandardScaler()
-        
-        if year > 2022:
-            preprocessed_df.drop(columns = [6,8,9, 13], inplace =True)
-            rates_df.drop(columns = [6,8,9,13], inplace =True)
 
-        save_path = f'{store_path}/results/{self.year}'
-        if not os.path.exists(save_path):
-            os.makedirs(f"{save_path}/plots")
-            os.makedirs(f"{save_path}/reports")
-            
-        self.plot_rates_merit_fig(rates_df, preprocessed_df, f"{save_path}/plots")
-        self.flag_channels_json(preprocessed_df, f"{save_path}")
         
+
+
+        #analyze ratios 
+        if get_ratio:
+            rates_df.drop(columns = [i for i in range(16) if i not in channels], 
+                          inplace = True)
+            #print(f"{channels=}")
+            ratio, avg = self.get_cumulative_rates(rates_df, 
+                                                   channels = channels)
+            preprocessed_df = self.preprocess_data(ratio)
+            self.plot_ratio_merit_fig(rates_df_original, 
+                                      preprocessed_df, 
+                                      ratio, 
+                                      avg, 
+                                      f"{save_path}/plots", 
+                                      valid_channels = channels)
+
+           
+            self.flag_channels_json(preprocessed_df, f"{save_path}")
+            
+
+        #analize lumi
+        else:
+            preprocessed_df = self.preprocess_data(rates_df)
+            
+            if year > 2022:
+                preprocessed_df.drop(columns = [6,8,9, 13], inplace =True)
+                rates_df.drop(columns = [6,8,9,13], inplace =True)
+                
+            self.plot_rates_merit_fig(rates_df, 
+                                      preprocessed_df, 
+                                      f"{save_path}/plots")
+            self.flag_channels_json(preprocessed_df, f"{save_path}")
+
+        #print(self.channels_dict)
+
+    
+    def get_not_shifted_channels(self, df):
+        if self.year < 2023:
+            channels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+        else:
+            channels = [0, 1, 2, 3, 4, 5, 7, 10, 11, 12, 14, 15]
+        ch_to_drop = []
+        for channel in channels:
+            detector = LevelShiftAD(c=3, side='both', window=60)
+            
+            # Train the detector on the data
+            detector.fit(df[channel])  # This is the training step
+            anomalies = detector.detect(df[channel])
+            anomalies.dropna(inplace=True)
+            if any(anomalies):
+                ch_to_drop.append(channel)
+                self.channels_dict[channel] = False
+        for channel in ch_to_drop:
+            channels.remove(channel)
+    
+        return channels
+
     
     def flag_channels_json(self, 
                            preprocessed_df: pd.DataFrame, 
@@ -114,8 +184,10 @@ class Processor:
                 if correlation_matrix[ind].mean() < 0.35:
                     contamination += 1
             contamination = contamination / correlation_matrix.shape[0]
-            
         
+        if contamination > 0.5:
+            contamination = 0.4
+            
         model = IsolationForest(contamination=contamination, random_state=42)
         column_scores = model.fit_predict(normalized_data.T)
         
@@ -127,15 +199,60 @@ class Processor:
             if element not in dictio_channels.keys():
                 dictio_channels[element] = False
         dictio_channels = {key: dictio_channels[key] for key in sorted(dictio_channels)}
-        
+        self.channels_dict = {key: self.channels_dict[key] and dictio_channels[key] for key in self.channels_dict}
         
         path_file = f"{save_path}/reports/{self.fill_number}.json"
 
-        #print(dictio_channels)
         with open(path_file, 'w') as json_file:
             json.dump(dictio_channels, json_file, indent=4)
-        
+
+    def filter_channels(self, df: pd.DataFrame, channels: list[int]) -> list[int]:
+        """Filters out channels where the average lumi is < 80% of the other channels' average."""
+        chs = df[channels]
     
+        # Compute mean lumi per channel over time
+        avg_lumi_per_channel = chs.mean(axis=0)  # Average over time for each channel
+    
+        # Compute the average of the averages for all channels except each one in turn
+        filtered_channels = []
+        for ch in channels:
+            remaining_channels = [c for c in channels if c != ch]
+            if not remaining_channels:
+                continue  # Avoid division by zero
+    
+            avg_other_channels = avg_lumi_per_channel[remaining_channels].mean()
+    
+            # Check if the channel is above 80% of the average of other channels
+            if avg_lumi_per_channel[ch] >= 0.8 * avg_other_channels:
+                filtered_channels.append(ch)
+        #print(f"{filtered_channels=}")
+        return filtered_channels
+
+
+    def get_cumulative_rates(self, rates, channels: list[int] = [4, 11, 12]) -> plt.Figure:
+        #hep.style.use("CMS")
+        #fig, axs = plt.subplots(3, 1, figsize=(20, 6), sharex=True)
+        #axs: List[plt.Axes] = axs.flatten()
+    
+        #attrs, df = read_fill(det, fill, "plt", agg_per_ls=True, index_filter=(0.05, 0.95))
+        
+        # Filter channels based on the 80% criterion
+        valid_channels = self.filter_channels(rates, channels)
+        #print(valid_channels)
+        if not valid_channels:
+            print("No valid channels left after filtering!")
+            return fig  # Return empty figure
+        
+        chs = rates[valid_channels]
+        
+        #chs = rates[channels]
+        avg = chs.mean(axis=1)
+        #cumsum = avg.cumsum(skipna=True) * 23.31 / 1e9
+        ratio = chs.div(chs.mean(axis=1), axis=0)
+
+        return ratio, avg
+
+
     def preprocess_data(self, data: pd.DataFrame) -> pd.DataFrame:
         """
         Studies the fill in the dataframe
@@ -148,14 +265,12 @@ class Processor:
             dfs.append(self.study_shannel(data, channel, name=channel))
         return pd.concat(dfs, axis=1)
 
-    def study_shannel(self, 
-                      data: pd.DataFrame, 
-                      studied_channel: int, 
-                      name="x") -> pd.DataFrame:
+    def study_shannel(
+        self, data: pd.DataFrame, studied_channel: int, name="x"
+    ) -> pd.DataFrame:
         """
-        Studies the channel in the dataframe. It first add the column "m_agg" to 
-        the dataframe, defined as the average of the channels that are not constant 
-        (i.e. those channels which less than 90% consecutive equal values)
+        Studies the channel in the dataframe
+        It first add the column "m_agg" to the dataframe, defined as the average of the channels that are not constant (i.e. those channels which less than 90% consecutive equal values)
 
         Args:
             data (pd.DataFrame): Dataframe with the data
@@ -221,7 +336,41 @@ class Processor:
         fig, ax = plt.subplots(1,1,figsize = (12, 9))
         sns.heatmap(correlation_matrix, cmap="coolwarm", xticklabels=df.columns, yticklabels=df.columns, annot=True, ax = ax)
         plt.savefig(f"{save_path}/{self.fill_number}_m.png");
-        
+
+
+    def plot_ratio_merit_fig(self, 
+                             rates_df: pd.DataFrame,
+                             processed_diff: pd.DataFrame,
+                             ratio: pd.DataFrame,
+                             avg: pd.Series,
+                             save_path: str,
+                             valid_channels = [1, 2, 3, 4, 5, 7, 10, 11, 12, 14, 15]):
+        fig, ax = plt.subplots(3, 1, figsize = (18, 12), sharex = True)
+        #for ch in processed_diff.columns:
+            #processed_diff[ch] = processed_diff[ch] / processed_diff[ch].mean()
+
+        avgs = ratio.mean(axis=0)
+        stds = ratio.std(axis=0)
+        rates_df = rates_df#[valid_channels]
+        ax[0].plot(rates_df.index, rates_df, "o", ms=2.5, label = [ch for ch in rates_df.columns])
+        #ax[1].plot(ratio.index, ratio, "o", ms=2.5, label=[f"{ch}: {avgs[ch]:.3f} ({stds[ch]:.3f})" for ch in ratio.columns])
+        ax[1].plot(ratio.index, ratio, "o", ms=2.5, label=[ch for ch in ratio.columns])
+        ax[2].plot(processed_diff.index, processed_diff, "o", ms=2.5, label=[ch for ch in processed_diff.columns])
+        ax[0].set_ylabel('rates')
+        ax[1].set_ylabel('ratio')
+        ax[2].set_ylabel('Norm. Processed diff.')
+        ax[1].set_xlabel(None)
+        ax[0].legend(loc ='best')
+        ax[1].legend(loc ='best')
+        ax[2].legend(loc ='best')
+
+
+        save_path = f'results/{self.year}/{self.fill_number}'
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+        plt.savefig(f"{save_path}/fill_{self.fill_number}.png")
+        #preprocessed.to_csv(f"{save_path}/{fill_number}_preprocessed_data.csv")
+
     
     def plot_rates_merit_fig(self, 
                              rates_df: pd.DataFrame,

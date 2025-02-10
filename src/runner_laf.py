@@ -21,6 +21,11 @@ parser.add_argument("--fill",
 parser.add_argument("--year",
                     type=int,
                     help="Year of the fill to be analyzed")
+parse.add_argument('--is_lumi',
+                   dest="is_lumi",
+                   type= bool,
+                   default= False,
+                   help = 'Lumi is being analyzed, or is it rates')
 parser.add_argument("--out",
                     type=str,
                     default='.',
@@ -30,9 +35,10 @@ args = parser.parse_args()
 
 pickles_path = args.path
 fill_number = args.fill
+is_lumi = args.is_lumi
 year = args.year
 output_path = args.out
 
 searcher = Processor()
-searcher(pickles_path, fill_number, year, output_path)
+searcher(path = pickles_path, fill = fill_number, year = 2024, get_ratio = True, store_path = output_path)
 
