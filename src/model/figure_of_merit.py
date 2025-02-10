@@ -19,12 +19,12 @@ class Processor:
         self.preprocessor = DifferencePreprocessor()
         
     def __call__(self, 
-                     pickles_path: str,
-                     fill_number: str,
-                     year: int = 2023,
-                     #columns: list[int] = [i for i in range(16)],
-                     get_ratio: bool = False,
-                     store_path: str = '.') -> Any:
+                 pickles_path: str,
+                 fill_number: str,
+                 year: int = 2023,
+                 #columns: list[int] = [i for i in range(16)],
+                 get_ratio: bool = False,
+                 store_path: str = '.') -> Any:
         """
         Executes the pipeline with the specified parameters.
     
@@ -364,10 +364,11 @@ class Processor:
         ax[1].legend(loc ='best')
         ax[2].legend(loc ='best')
 
-
-        save_path = f'results/{self.year}/{self.fill_number}'
-        if not os.path.exists(save_path):
-            os.makedirs(save_path)
+        #path_file = f"{save_path}/reports/{self.fill_number}.json"
+        #save_path = f'results/{self.year}/{self.fill_number}'
+        #save_path = 
+        #if not os.path.exists(save_path):
+        #    os.makedirs(save_path)
         plt.savefig(f"{save_path}/fill_{self.fill_number}.png")
         #preprocessed.to_csv(f"{save_path}/{fill_number}_preprocessed_data.csv")
 
