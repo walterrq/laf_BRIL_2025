@@ -78,8 +78,7 @@ class Processor:
         
         #look for not shifted channels in the luminosity
         channels = self.get_not_shifted_channels(rates_df)
-
-        #for ch in 
+        
         
         #condition punctual, non-explained spikes in fill 7921
         if fill_number == 7921:
@@ -95,16 +94,24 @@ class Processor:
             #print(f"{channels=}")
             ratio, avg = self.get_cumulative_rates(rates_df, 
                                                    channels = channels)
-            preprocessed_df = self.preprocess_data(ratio)
-            self.plot_ratio_merit_fig(rates_df_original, 
-                                      preprocessed_df, 
-                                      ratio, 
-                                      avg, 
-                                      f"{save_path}/plots", 
-                                      valid_channels = channels)
-
-           
-            self.flag_channels_json(preprocessed_df, f"{save_path}")
+            if type(ratio) != type(None):
+                preprocessed_df = self.preprocess_data(ratio)
+                self.plot_ratio_merit_fig(rates_df_original, 
+                                          preprocessed_df, 
+                                          ratio, 
+                                          avg, 
+                                          f"{save_path}/plots", 
+                                          valid_channels = channels)
+    
+               
+                self.flag_channels_json(preprocessed_df, f"{save_path}")
+            else:
+                #print(f"{rates_df_original.columns=}")
+                preprocessed_df = self.preprocess_data(rates_df_original[[0,1,2,3,4,5,7,10,11,12,14,15]])
+                self.plot_rates_merit_fig(rates_df_original[[0,1,2,3,4,5,7,10,11,12,14,15]], 
+                                          preprocessed_df, 
+                                          f"{save_path}/plots")
+                self.flag_channels_json(preprocessed_df, f"{save_path}")
             
 
         #analize lumi
@@ -130,7 +137,7 @@ class Processor:
             channels = [0, 1, 2, 3, 4, 5, 7, 10, 11, 12, 14, 15]
         ch_to_drop = []
         for channel in channels:
-            detector = LevelShiftAD(c=3, side='both', window=60)
+            detector = LevelShiftAD(c=3, side='negative', window=40)
             
             # Train the detector on the data
             detector.fit(df[channel])  # This is the training step
@@ -238,19 +245,21 @@ class Processor:
         
         # Filter channels based on the 80% criterion
         valid_channels = self.filter_channels(rates, channels)
-        #print(valid_channels)
         if not valid_channels:
             print("No valid channels left after filtering!")
-            return fig  # Return empty figure
+            channels_dict = {i : False for i in range(16)}
+            return None, None
+            #chs = rates[0, 1, 2, 3, 4, 5, 7, 10, 11, 12, 14, 15]
+        #    return None  # Return empty figure
+        else:
+            chs = rates[valid_channels]
         
-        chs = rates[valid_channels]
-        
-        #chs = rates[channels]
-        avg = chs.mean(axis=1)
-        #cumsum = avg.cumsum(skipna=True) * 23.31 / 1e9
-        ratio = chs.div(chs.mean(axis=1), axis=0)
-
-        return ratio, avg
+            #chs = rates[channels]
+            avg = chs.mean(axis=1)
+            #cumsum = avg.cumsum(skipna=True) * 23.31 / 1e9
+            ratio = chs.div(chs.mean(axis=1), axis=0)
+    
+            return ratio, avg
 
 
     def preprocess_data(self, data: pd.DataFrame) -> pd.DataFrame:
