@@ -1,4 +1,4 @@
-import argparse
+
 import numpy as np
 from poggers.io import read_fill
 from typing import Any
@@ -9,6 +9,17 @@ import os
 from pathlib import Path
 from model.preprocessor import DifferencePreprocessor
 from model.figure_of_merit import Processor
+import argparse
+
+def str_to_bool(value):
+    if isinstance(value, bool):
+        return value
+    if value.lower() in ('true', '1', 'yes'):
+        return True
+    elif value.lower() in ('false', '0', 'no'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError("Boolean value expected.")
 
 
 parser = argparse.ArgumentParser(description="Run the Processor with given pickles_path and fill_number.")
@@ -23,9 +34,14 @@ parser.add_argument("--year",
                     help="Year of the fill to be analyzed")
 parser.add_argument('--is_lumi',
                    dest="is_lumi",
-                   type= bool,
-                   default= False,
+                   type= str_to_bool,
+                   default= True,
                    help = 'Lumi is being analyzed, or is it rates')
+parser.add_argument("--study_corr",
+                    dest="study_corr"
+                    type=str_to_bool,
+                    default=True
+                    help="Perform study with Isolation forest")
 parser.add_argument("--out",
                     type=str,
                     default='.',
@@ -33,12 +49,21 @@ parser.add_argument("--out",
 
 args = parser.parse_args()
 
+
 pickles_path = args.path
 fill_number = args.fill
 is_lumi = args.is_lumi
 year = args.year
+study_corr = args.study_corr
 output_path = args.out
 
+print(f'{study_corr=}')
+
 searcher = Processor()
-searcher(pickles_path = pickles_path, fill_number = fill_number, year = year, get_ratio = is_lumi, store_path = output_path)
+searcher(pickles_path = pickles_path, 
+         fill_number = fill_number, 
+         year = year, 
+         study_corr = study_corr, 
+         get_ratio = is_lumi, 
+         store_path = output_path)
 

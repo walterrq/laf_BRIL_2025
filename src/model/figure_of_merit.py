@@ -21,8 +21,8 @@ class Processor:
     def __call__(self, 
                  pickles_path: str,
                  fill_number: str,
+                 study_corr: bool,
                  year: int = 2023,
-                 #columns: list[int] = [i for i in range(16)],
                  get_ratio: bool = False,
                  store_path: str = '.') -> Any:
         """
@@ -38,6 +38,7 @@ class Processor:
         Returns:
             Any: The output of the pipeline, depending on its implementation.
         """
+        #print(f"{study_corr=}")
         #Set the year and the fill number as an attribute
         self.year = year
         PoggerOptions().vdm_path = Path(f"/eos/cms/store/group/dpg_bril/comm_bril/{self.year}/vdm/")
@@ -85,8 +86,6 @@ class Processor:
             rates_df = rates_df[np.sum(rates_df, axis = 1) < 11]
 
         
-
-
         #analyze ratios 
         if get_ratio:
             rates_df.drop(columns = [i for i in range(16) if i not in channels], 
@@ -102,16 +101,25 @@ class Processor:
                                           avg, 
                                           f"{save_path}/plots", 
                                           valid_channels = channels)
-    
-               
-                self.flag_channels_json(preprocessed_df, f"{save_path}")
+                if study_corr:
+                    self.flag_channels_json(preprocessed_df, f"{save_path}")
+                else:
+                    print("Isolation Forest not applied")
+                    path_file = f"{save_path}/reports/{self.fill_number}.json"
+                    with open(path_file, 'w') as json_file:
+                        json.dump(self.channels_dict, json_file, indent=4)
+                    
             else:
                 #print(f"{rates_df_original.columns=}")
                 preprocessed_df = self.preprocess_data(rates_df_original[[0,1,2,3,4,5,7,10,11,12,14,15]])
                 self.plot_rates_merit_fig(rates_df_original[[0,1,2,3,4,5,7,10,11,12,14,15]], 
                                           preprocessed_df, 
                                           f"{save_path}/plots")
-                self.flag_channels_json(preprocessed_df, f"{save_path}")
+                
+                print("Isolation Forest not applied, all channels anomalous")
+                path_file = f"{save_path}/reports/{self.fill_number}.json"
+                with open(path_file, 'w') as json_file:
+                    json.dump(self.channels_dict, json_file, indent=4)
             
 
         #analize lumi
@@ -125,7 +133,13 @@ class Processor:
             self.plot_rates_merit_fig(rates_df, 
                                       preprocessed_df, 
                                       f"{save_path}/plots")
-            self.flag_channels_json(preprocessed_df, f"{save_path}")
+            if study_corr:
+                self.flag_channels_json(preprocessed_df, f"{save_path}")
+            else:
+                print("Isolation Forest not applied")
+                path_file = f"{save_path}/reports/{self.fill_number}.json"
+                with open(path_file, 'w') as json_file:
+                    json.dump(self.channels_dict, json_file, indent=4)
 
         #print(self.channels_dict)
 
@@ -173,10 +187,12 @@ class Processor:
                 The directory path where the JSON file containing the flagged channels
                 will be saved.
         """
-        
-        scaler = StandardScaler()
-        normalized_data = scaler.fit_transform(preprocessed_df)
 
+        path_file = f"{save_path}/reports/{self.fill_number}.json"
+        #scaler = StandardScaler()
+        #normalized_data = scaler.fit_transform(preprocessed_df)
+
+        normalized_data = preprocessed_df.values
         normed_df = pd.DataFrame(normalized_data, columns = preprocessed_df.columns)
         normed_df.index = preprocessed_df.index
         self.plot_correlation_matrix(normed_df, f"{save_path}/plots")
@@ -191,30 +207,34 @@ class Processor:
                 if correlation_matrix[ind].mean() < 0.35:
                     contamination += 1
             contamination = contamination / correlation_matrix.shape[0]
-            if contamination == 0:
-                contamination = 0.01
+            #if contamination == 0:
+                #contamination = 0.001
         
         if contamination > 0.5:
             contamination = 0.4
-            
-        model = IsolationForest(contamination=contamination, random_state=42)
-        column_scores = model.fit_predict(normalized_data.T)
-        
-        l_scores = [True if i == 1 else False for i in column_scores]
-        l_channels = preprocessed_df.columns.to_list()
-        
-        dictio_channels = {l_channels[i]:l_scores[i] for i in range(len(l_channels))}
-        for element in range(16):
-            if element not in dictio_channels.keys():
-                dictio_channels[element] = False
-        dictio_channels = {key: dictio_channels[key] for key in sorted(dictio_channels)}
-        self.channels_dict = {key: self.channels_dict[key] and dictio_channels[key] for key in self.channels_dict}
-        
-        path_file = f"{save_path}/reports/{self.fill_number}.json"
 
+        if contamination != 0:
+            model = IsolationForest(contamination=contamination, random_state=42)
+            column_scores = model.fit_predict(normalized_data.T)
+            
+            l_scores = [True if i == 1 else False for i in column_scores]
+            l_channels = preprocessed_df.columns.to_list()
+            
+            dictio_channels = {l_channels[i]:l_scores[i] for i in range(len(l_channels))}
+            for element in range(16):
+                if element not in dictio_channels.keys():
+                    dictio_channels[element] = False
+            dictio_channels = {key: dictio_channels[key] for key in sorted(dictio_channels)}
+            self.channels_dict = {key: self.channels_dict[key] and dictio_channels[key] for key in self.channels_dict}
+
+        else:
+            dictio_channels = self.channels_dict
+        
         with open(path_file, 'w') as json_file:
             json.dump(dictio_channels, json_file, indent=4)
 
+
+    
     def filter_channels(self, df: pd.DataFrame, channels: list[int]) -> list[int]:
         """Filters out channels where the average lumi is < 80% of the other channels' average."""
         chs = df[channels]
