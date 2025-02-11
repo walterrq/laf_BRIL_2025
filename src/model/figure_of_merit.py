@@ -191,6 +191,8 @@ class Processor:
                 if correlation_matrix[ind].mean() < 0.35:
                     contamination += 1
             contamination = contamination / correlation_matrix.shape[0]
+            if contamination == 0:
+                contamination == 0.01
         
         if contamination > 0.5:
             contamination = 0.4
