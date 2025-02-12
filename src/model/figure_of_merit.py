@@ -116,17 +116,23 @@ class Processor:
                         json.dump(self.channels_dict, json_file, indent=4)
                     
             else:
-                #print(f"{rates_df_original.columns=}")
-                preprocessed_df = self.preprocess_data(rates_df)#_original[[0,1,2,3,4,5,7,10,11,12,14,15]])
-                self.plot_rates_merit_fig(rates_df,#_original[[0,1,2,3,4,5,7,10,11,12,14,15]], 
-                                          preprocessed_df, 
-                                          f"{save_path}/plots")
+                print(f"{rates_df_original.columns=}")
+                if (rates_df.shape[0] == 0) or (rates_df.shape[1] < 2):
+                    self.plot_nothing(save_path)
+                    path_file = f"{save_path}/reports/{self.fill_number}.json"
+                    with open(path_file, 'w') as json_file:
+                        json.dump(self.channels_dict, json_file, indent=4)
+                else:
+                    preprocessed_df = self.preprocess_data(rates_df)#_original[[0,1,2,3,4,5,7,10,11,12,14,15]])
+                    self.plot_rates_merit_fig(rates_df,#_original[[0,1,2,3,4,5,7,10,11,12,14,15]], 
+                                              preprocessed_df, 
+                                              f"{save_path}/plots")
+                    
+                    print("Isolation Forest not applied, all channels anomalous")
+                    path_file = f"{save_path}/reports/{self.fill_number}.json"
+                    with open(path_file, 'w') as json_file:
+                        json.dump(self.channels_dict, json_file, indent=4)
                 
-                print("Isolation Forest not applied, all channels anomalous")
-                path_file = f"{save_path}/reports/{self.fill_number}.json"
-                with open(path_file, 'w') as json_file:
-                    json.dump(self.channels_dict, json_file, indent=4)
-            
 
         #analize lumi
         else: #if not get ratio
@@ -378,7 +384,11 @@ class Processor:
         sns.heatmap(correlation_matrix, cmap="coolwarm", xticklabels=df.columns, yticklabels=df.columns, annot=True, ax = ax)
         plt.savefig(f"{save_path}/{self.fill_number}_m.png");
 
-
+    def plot_nothing(self, 
+                     save_path):
+        fig, ax = plt.subplots(3, 1, figsize = (18, 12), sharex = True)
+        plt.savefig(f"{save_path}/fill_{self.fill_number}.png")
+        
     def plot_ratio_merit_fig(self, 
                              rates_df: pd.DataFrame,
                              processed_diff: pd.DataFrame,
@@ -427,5 +437,5 @@ class Processor:
         ax[1].set_ylabel('Norm. Processed diff.')
         ax[1].set_xlabel(None)
 
-        plt.savefig(f"{save_path}/{self.fill_number}_rf.png")
+        plt.savefig(f"{save_path}/fill_{self.fill_number}.png")
         #preprocessed.to_csv(f"{save_path}/{fill_number}_preprocessed_data.csv")
