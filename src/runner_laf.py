@@ -37,10 +37,15 @@ parser.add_argument('--is_lumi',
                    type= str_to_bool,
                    default= True,
                    help = 'Lumi is being analyzed, or is it rates')
+parser.add_argument("--corrs_path",
+                    dest="corrs_path",
+                    type=str,
+                    default='/afs/cern.ch/user/f/fromeo/public/4Tomas/corrs_all.json',
+                    help="Path to the corrections file")
 parser.add_argument("--study_corr",
-                    dest="study_corr"
+                    dest="study_corr",
                     type=str_to_bool,
-                    default=True
+                    default=True,
                     help="Perform study with Isolation forest")
 parser.add_argument("--out",
                     type=str,
@@ -56,13 +61,14 @@ is_lumi = args.is_lumi
 year = args.year
 study_corr = args.study_corr
 output_path = args.out
+corrs_path = args.corrs_path
 
-print(f'{study_corr=}')
 
 searcher = Processor()
 searcher(pickles_path = pickles_path, 
          fill_number = fill_number, 
-         year = year, 
+         year = year,
+         corrs_path = corrs_path,
          study_corr = study_corr, 
          get_ratio = is_lumi, 
          store_path = output_path)

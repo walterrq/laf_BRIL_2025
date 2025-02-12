@@ -26,5 +26,6 @@ In order to use this tool, run the `runner_laf.py` like this:
 ```
 python runner_laf.py --path <path/to/the/pickle/files> --fill <number_of_the_fill_in_the_given_path> --year <year_of_the_fill> --out <output/path> --is_lumi <boolean_to_analize_ratio> --study_corr False
 ```
+You can add an extra argument to read the `corrs_all.json` from the path you have it, otherways it will try to read it from `/afs/user/f/fromeo/public/4Tomas/corrs_all.json`
 
 The output plot will be stored in the folder `src/results/<year>` with the fill number.

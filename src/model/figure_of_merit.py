@@ -24,6 +24,7 @@ class Processor:
                  study_corr: bool,
                  year: int = 2023,
                  get_ratio: bool = False,
+                 corrs_path: str = '/eos/user/t/tatehort/nonlinearity/corrs_all.json',
                  store_path: str = '.') -> Any:
         """
         Executes the pipeline with the specified parameters.
@@ -76,10 +77,18 @@ class Processor:
             self.channels_dict[9] = False
             self.channels_dict[13] = False
             #rates_df.drop(columns = [6, 8, 9, 13], inplace = True)
-        
+
+
+        channels_marked = self.read_non_usefull_channels_corr(corrs_path)
+        self.channels_dict = {key: self.channels_dict[key] and channels_marked[key] for key in self.channels_dict}
         #look for not shifted channels in the luminosity
         channels = self.get_not_shifted_channels(rates_df)
-        
+        for channel in range(16):
+            if (self.channels_dict[channel] == False) and (channel in channels):
+                channels.remove(channel)
+
+        rates_df.drop(columns = [i for i in range(16) if i not in channels], 
+                      inplace = True)
         
         #condition punctual, non-explained spikes in fill 7921
         if fill_number == 7921:
@@ -88,14 +97,11 @@ class Processor:
         
         #analyze ratios 
         if get_ratio:
-            rates_df.drop(columns = [i for i in range(16) if i not in channels], 
-                          inplace = True)
-            #print(f"{channels=}")
             ratio, avg = self.get_cumulative_rates(rates_df, 
                                                    channels = channels)
             if type(ratio) != type(None):
                 preprocessed_df = self.preprocess_data(ratio)
-                self.plot_ratio_merit_fig(rates_df_original, 
+                self.plot_ratio_merit_fig(rates_df,#_original, 
                                           preprocessed_df, 
                                           ratio, 
                                           avg, 
@@ -111,8 +117,8 @@ class Processor:
                     
             else:
                 #print(f"{rates_df_original.columns=}")
-                preprocessed_df = self.preprocess_data(rates_df_original[[0,1,2,3,4,5,7,10,11,12,14,15]])
-                self.plot_rates_merit_fig(rates_df_original[[0,1,2,3,4,5,7,10,11,12,14,15]], 
+                preprocessed_df = self.preprocess_data(rates_df)#_original[[0,1,2,3,4,5,7,10,11,12,14,15]])
+                self.plot_rates_merit_fig(rates_df,#_original[[0,1,2,3,4,5,7,10,11,12,14,15]], 
                                           preprocessed_df, 
                                           f"{save_path}/plots")
                 
@@ -123,12 +129,8 @@ class Processor:
             
 
         #analize lumi
-        else:
+        else: #if not get ratio
             preprocessed_df = self.preprocess_data(rates_df)
-            
-            if year > 2022:
-                preprocessed_df.drop(columns = [6,8,9, 13], inplace =True)
-                rates_df.drop(columns = [6,8,9,13], inplace =True)
                 
             self.plot_rates_merit_fig(rates_df, 
                                       preprocessed_df, 
@@ -141,8 +143,16 @@ class Processor:
                 with open(path_file, 'w') as json_file:
                     json.dump(self.channels_dict, json_file, indent=4)
 
-        #print(self.channels_dict)
+        print(self.channels_dict)
 
+    
+    def read_non_usefull_channels_corr(self, corrs_path):
+        with open(corrs_path, "r") as file:
+            datos = json.load(file)  # Convierte el JSON en un diccionario de Python
+        
+        channels = datos[str(self.fill_number)]['eff']
+        channels = {int(k): not np.isnan(v) for k, v in channels.items()}
+        return channels
     
     def get_not_shifted_channels(self, df):
         if self.year < 2023:
