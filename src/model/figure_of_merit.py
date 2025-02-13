@@ -110,13 +110,13 @@ class Processor:
                 if study_corr:
                     self.flag_channels_json(preprocessed_df, f"{save_path}")
                 else:
-                    print("Isolation Forest not applied")
+                    #print("Isolation Forest not applied")
                     path_file = f"{save_path}/reports/{self.fill_number}.json"
                     with open(path_file, 'w') as json_file:
                         json.dump(self.channels_dict, json_file, indent=4)
                     
             else:
-                print(f"{rates_df_original.columns=}")
+                #print(f"{rates_df_original.columns=}")
                 if (rates_df.shape[0] == 0) or (rates_df.shape[1] < 2):
                     self.plot_nothing(save_path)
                     path_file = f"{save_path}/reports/{self.fill_number}.json"
@@ -128,7 +128,7 @@ class Processor:
                                               preprocessed_df, 
                                               f"{save_path}/plots")
                     
-                    print("Isolation Forest not applied, all channels anomalous")
+                    #print("Isolation Forest not applied, all channels anomalous")
                     path_file = f"{save_path}/reports/{self.fill_number}.json"
                     with open(path_file, 'w') as json_file:
                         json.dump(self.channels_dict, json_file, indent=4)
@@ -144,7 +144,7 @@ class Processor:
             if study_corr:
                 self.flag_channels_json(preprocessed_df, f"{save_path}")
             else:
-                print("Isolation Forest not applied")
+                #print("Isolation Forest not applied")
                 path_file = f"{save_path}/reports/{self.fill_number}.json"
                 with open(path_file, 'w') as json_file:
                     json.dump(self.channels_dict, json_file, indent=4)
@@ -387,7 +387,7 @@ class Processor:
     def plot_nothing(self, 
                      save_path):
         fig, ax = plt.subplots(3, 1, figsize = (18, 12), sharex = True)
-        plt.savefig(f"{save_path}/fill_{self.fill_number}.png")
+        plt.savefig(f"{save_path}/plots/fill_{self.fill_number}.png")
         
     def plot_ratio_merit_fig(self, 
                              rates_df: pd.DataFrame,
