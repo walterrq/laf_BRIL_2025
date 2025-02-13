@@ -91,7 +91,7 @@ class Processor:
             path_file_na = f"{save_path}/reports/{self.fill_number}_na.json"
             with open(path_file_na, 'w') as json_file:
                 json.dump(dict_nans, json_file, indent=4)
-            channels = [i for i in range(16)]
+            channels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
             
         for channel in range(16):
             if (self.channels_dict[channel] == False) and (channel in channels):
