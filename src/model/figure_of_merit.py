@@ -89,6 +89,15 @@ class Processor:
 
         rates_df.drop(columns = [i for i in range(16) if i not in channels], 
                       inplace = True)
+
+        if rates_df.shape[0] < 200:
+            print(f"No enought instances to trust fill {self.fill_number}")
+            dict_nans = {i : np.nan for i in range(16)}
+            path_file_na = f"{save_path}/reports/{self.fill_number}_na.json"
+            with open(path_file_na, 'w') as json_file:
+                json.dump(dict_nans, json_file, indent=4)
+            
+            
         
         #condition punctual, non-explained spikes in fill 7921
         if fill_number == 7921:
@@ -161,13 +170,16 @@ class Processor:
         return channels
     
     def get_not_shifted_channels(self, df):
+        window = 40
+        if df.shape[0] < 200:
+            window = 10
         if self.year < 2023:
             channels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
         else:
             channels = [0, 1, 2, 3, 4, 5, 7, 10, 11, 12, 14, 15]
         ch_to_drop = []
         for channel in channels:
-            detector = LevelShiftAD(c=3, side='negative', window=40)
+            detector = LevelShiftAD(c=3, side='negative', window=window)
             
             # Train the detector on the data
             detector.fit(df[channel])  # This is the training step
@@ -403,10 +415,10 @@ class Processor:
         avgs = ratio.mean(axis=0)
         stds = ratio.std(axis=0)
         rates_df = rates_df#[valid_channels]
-        ax[0].plot(rates_df.index, rates_df, "o", ms=2.5, label = [ch for ch in rates_df.columns])
+        ax[0].plot(rates_df.index, rates_df, "o-", ms=2.5, label = [ch for ch in rates_df.columns])
         #ax[1].plot(ratio.index, ratio, "o", ms=2.5, label=[f"{ch}: {avgs[ch]:.3f} ({stds[ch]:.3f})" for ch in ratio.columns])
-        ax[1].plot(ratio.index, ratio, "o", ms=2.5, label=[ch for ch in ratio.columns])
-        ax[2].plot(processed_diff.index, processed_diff, "o", ms=2.5, label=[ch for ch in processed_diff.columns])
+        ax[1].plot(ratio.index, ratio, "o-", ms=2.5, label=[ch for ch in ratio.columns])
+        ax[2].plot(processed_diff.index, processed_diff, "o-", ms=2.5, label=[ch for ch in processed_diff.columns])
         ax[0].set_ylabel('rates')
         ax[1].set_ylabel('ratio')
         ax[2].set_ylabel('Norm. Processed diff.')
