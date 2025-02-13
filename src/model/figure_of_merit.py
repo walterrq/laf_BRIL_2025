@@ -82,7 +82,17 @@ class Processor:
         channels_marked = self.read_non_usefull_channels_corr(corrs_path)
         self.channels_dict = {key: self.channels_dict[key] and channels_marked[key] for key in self.channels_dict}
         #look for not shifted channels in the luminosity
-        channels = self.get_not_shifted_channels(rates_df)
+        
+        try:
+            channels = self.get_not_shifted_channels(rates_df)
+        except:
+            print(f"No enought instances to trust fill {self.fill_number}")
+            dict_nans = {i : np.nan for i in range(16)}
+            path_file_na = f"{save_path}/reports/{self.fill_number}_na.json"
+            with open(path_file_na, 'w') as json_file:
+                json.dump(dict_nans, json_file, indent=4)
+            channels = [i for i in range(16)]
+            
         for channel in range(16):
             if (self.channels_dict[channel] == False) and (channel in channels):
                 channels.remove(channel)
@@ -90,12 +100,8 @@ class Processor:
         rates_df.drop(columns = [i for i in range(16) if i not in channels], 
                       inplace = True)
 
-        if rates_df.shape[0] < 200:
-            print(f"No enought instances to trust fill {self.fill_number}")
-            dict_nans = {i : np.nan for i in range(16)}
-            path_file_na = f"{save_path}/reports/{self.fill_number}_na.json"
-            with open(path_file_na, 'w') as json_file:
-                json.dump(dict_nans, json_file, indent=4)
+        #if rates_df.shape[0] < 200:
+        #    
             
             
         
@@ -125,7 +131,6 @@ class Processor:
                         json.dump(self.channels_dict, json_file, indent=4)
                     
             else:
-                #print(f"{rates_df_original.columns=}")
                 if (rates_df.shape[0] == 0) or (rates_df.shape[1] < 2):
                     self.plot_nothing(save_path)
                     path_file = f"{save_path}/reports/{self.fill_number}.json"
