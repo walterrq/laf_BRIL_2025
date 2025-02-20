@@ -401,15 +401,13 @@ class Processor:
         
         hep.style.use("CMS")
         fig, ax = plt.subplots(1,1,figsize = (12, 9))
-        hep.cms.label("Preliminary", rlabel = f'Fill = {self.fill_number} ({self.year}, 13.6 TeV)', data = True, ax = ax)
+        hep.cms.label("Preliminary", rlabel = f'Fill {self.fill_number} ({self.year}, 13.6 TeV)', data = True, ax = ax)
         sns.heatmap(correlation_matrix, cmap="coolwarm", xticklabels=df.columns, yticklabels=df.columns, annot=True, ax = ax)
         plt.savefig(f"{save_path}/{self.fill_number}_m.png");
 
     def plot_nothing(self, 
                      save_path):
-        hep.style.use("CMS")
         fig, ax = plt.subplots(3, 1, figsize = (18, 12), sharex = True)
-        hep.cms.label("Preliminary", rlabel = f'Fill = {self.fill_number} ({self.year}, 13.6 TeV)', data = True, ax = ax)
         plt.savefig(f"{save_path}/plots/fill_{self.fill_number}.png")
         
     def plot_ratio_merit_fig(self, 
@@ -423,21 +421,23 @@ class Processor:
         hep.style.use("CMS")
         fig, ax = plt.subplots(3, 1, figsize = (20, 16), sharex = True, constrained_layout =True)
 
-        hep.cms.label("Preliminary", rlabel = f'Fill = {self.fill_number} ({self.year}, 13.6 TeV)', data = True, ax = ax[0])
+        hep.cms.label("Preliminary", rlabel = f'Fill {self.fill_number} ({self.year}, 13.6 TeV)', data = True, ax = ax[0])
+        #hep.cms.label("Preliminary", rlabel = f'Fill = {self.fill_number}', data = True, ax = ax[1])
+        #hep.cms.label("Preliminary", rlabel = f'Fill = {self.fill_number}', data = True, ax = ax[2])
         avgs = ratio.mean(axis=0)
         stds = ratio.std(axis=0)
         rates_df = rates_df#[valid_channels]
-        ax[0].plot(rates_df.index, rates_df, "o-", ms=2.5, label = [f"ch{ch} / mean" for ch in rates_df.columns])
-        ax[1].plot(ratio.index, ratio, "o-", ms=2.5, label=[f"ch{ch} / mean" for ch in ratio.columns])
-        ax[2].plot(processed_diff.index, processed_diff, "o-", ms=2.5, label=[f"ch{ch} / mean" for ch in processed_diff.columns])
+        ax[0].plot(rates_df.index, rates_df, "o-", ms=2.5, label = [f"ch {ch}" for ch in rates_df.columns])
+        ax[1].plot(ratio.index, ratio, "o-", ms=2.5, label=[f"ch {ch}/ mean" for ch in ratio.columns])
+        ax[2].plot(processed_diff.index, processed_diff, "o-", ms=2.5, label=[f"ch {ch} / mean" for ch in processed_diff.columns])
         ax[0].set_ylabel(r'Lumi [$hz/\mu b$]')
         ax[1].set_ylabel('Ratio')
         ax[2].set_ylabel('Ratio Processed diff. [a.u.]')
         ax[2].set_xlabel('Time [$s$]')
         ax[1].set_xlabel(None)
-        ax[0].legend(loc ='best', bbox_to_anchor=(1.02, 1))
+        ax[0].legend(loc ='best', bbox_to_anchor=(1.15, 1))
         ax[1].legend(loc ='best', bbox_to_anchor=(1.02, 1))
-        ax[2].legend(loc ='best', bbox_to_anchor=(1.02, 1))
+        #ax[2].legend(loc ='best', bbox_to_anchor=(1.02, 1))
 
         plt.savefig(f"{save_path}/fill_{self.fill_number}.png")
         
