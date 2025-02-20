@@ -29,6 +29,7 @@ markupsafe
 matplotlib
 mergedeep
 mkdocs
+mplhep
 numba
 numexpr
 numpy
