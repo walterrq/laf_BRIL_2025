@@ -12,6 +12,7 @@ from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
 from poggers.options import PoggerOptions
 from adtk.detector import LevelShiftAD
+import mplhep as hep
 
 
 class Processor:
@@ -397,13 +398,18 @@ class Processor:
                                 df: pd.DataFrame,
                                 save_path: str):
         correlation_matrix = np.corrcoef(df.T)
+        
+        hep.style.use("CMS")
         fig, ax = plt.subplots(1,1,figsize = (12, 9))
+        hep.cms.label("Preliminary", rlabel = f'Fill = {self.fill_number} ({self.year}, 13.6 TeV)', data = True, ax = ax)
         sns.heatmap(correlation_matrix, cmap="coolwarm", xticklabels=df.columns, yticklabels=df.columns, annot=True, ax = ax)
         plt.savefig(f"{save_path}/{self.fill_number}_m.png");
 
     def plot_nothing(self, 
                      save_path):
+        hep.style.use("CMS")
         fig, ax = plt.subplots(3, 1, figsize = (18, 12), sharex = True)
+        hep.cms.label("Preliminary", rlabel = f'Fill = {self.fill_number} ({self.year}, 13.6 TeV)', data = True, ax = ax)
         plt.savefig(f"{save_path}/plots/fill_{self.fill_number}.png")
         
     def plot_ratio_merit_fig(self, 
@@ -412,47 +418,41 @@ class Processor:
                              ratio: pd.DataFrame,
                              avg: pd.Series,
                              save_path: str,
-                             valid_channels = [1, 2, 3, 4, 5, 7, 10, 11, 12, 14, 15]):
-        fig, ax = plt.subplots(3, 1, figsize = (18, 12), sharex = True)
-        #for ch in processed_diff.columns:
-            #processed_diff[ch] = processed_diff[ch] / processed_diff[ch].mean()
+                             valid_channels = [0, 1, 2, 3, 4, 5, 7, 10, 11, 12, 14, 15]):
+        
+        hep.style.use("CMS")
+        fig, ax = plt.subplots(3, 1, figsize = (20, 16), sharex = True, constrained_layout =True)
 
+        hep.cms.label("Preliminary", rlabel = f'Fill = {self.fill_number} ({self.year}, 13.6 TeV)', data = True, ax = ax[0])
         avgs = ratio.mean(axis=0)
         stds = ratio.std(axis=0)
         rates_df = rates_df#[valid_channels]
-        ax[0].plot(rates_df.index, rates_df, "o-", ms=2.5, label = [ch for ch in rates_df.columns])
-        #ax[1].plot(ratio.index, ratio, "o", ms=2.5, label=[f"{ch}: {avgs[ch]:.3f} ({stds[ch]:.3f})" for ch in ratio.columns])
-        ax[1].plot(ratio.index, ratio, "o-", ms=2.5, label=[ch for ch in ratio.columns])
-        ax[2].plot(processed_diff.index, processed_diff, "o-", ms=2.5, label=[ch for ch in processed_diff.columns])
-        ax[0].set_ylabel('rates')
-        ax[1].set_ylabel('ratio')
-        ax[2].set_ylabel('Norm. Processed diff.')
+        ax[0].plot(rates_df.index, rates_df, "o-", ms=2.5, label = [f"ch{ch} / mean" for ch in rates_df.columns])
+        ax[1].plot(ratio.index, ratio, "o-", ms=2.5, label=[f"ch{ch} / mean" for ch in ratio.columns])
+        ax[2].plot(processed_diff.index, processed_diff, "o-", ms=2.5, label=[f"ch{ch} / mean" for ch in processed_diff.columns])
+        ax[0].set_ylabel(r'Lumi [$hz/\mu b$]')
+        ax[1].set_ylabel('Ratio')
+        ax[2].set_ylabel('Ratio Processed diff. [a.u.]')
+        ax[2].set_xlabel('Time [$s$]')
         ax[1].set_xlabel(None)
-        ax[0].legend(loc ='best')
-        ax[1].legend(loc ='best')
-        ax[2].legend(loc ='best')
+        ax[0].legend(loc ='best', bbox_to_anchor=(1.02, 1))
+        ax[1].legend(loc ='best', bbox_to_anchor=(1.02, 1))
+        ax[2].legend(loc ='best', bbox_to_anchor=(1.02, 1))
 
-        #path_file = f"{save_path}/reports/{self.fill_number}.json"
-        #save_path = f'results/{self.year}/{self.fill_number}'
-        #save_path = 
-        #if not os.path.exists(save_path):
-        #    os.makedirs(save_path)
         plt.savefig(f"{save_path}/fill_{self.fill_number}.png")
-        #preprocessed.to_csv(f"{save_path}/{fill_number}_preprocessed_data.csv")
-
+        
     
     def plot_rates_merit_fig(self, 
                              rates_df: pd.DataFrame,
                              processed_diff: pd.DataFrame, 
                              save_path: str):
-        fig, ax = plt.subplots(2,1, figsize = (18, 8), sharex = True)
+        fig, ax = plt.subplots(2,1, figsize = (20, 12), sharex = True)
         for ch in rates_df.columns:
             processed_diff[ch] = processed_diff[ch] / processed_diff[ch].mean()
             ax[0].plot(rates_df[ch].index, rates_df[ch].values, linewidth = 2, label=None)
             sns.lineplot(data=processed_diff[ch], label=ch, ax = ax[1])
-        ax[0].set_ylabel('rates')
-        ax[1].set_ylabel('Norm. Processed diff.')
+        ax[0].set_ylabel(r'Lumi [$hz/\mu b$]')
+        ax[1].set_ylabel('Processed diff. [a.u.]')
         ax[1].set_xlabel(None)
 
         plt.savefig(f"{save_path}/fill_{self.fill_number}.png")
-        #preprocessed.to_csv(f"{save_path}/{fill_number}_preprocessed_data.csv")
