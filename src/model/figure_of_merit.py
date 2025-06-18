@@ -800,8 +800,8 @@ class Processor:
         #print(f"2.{usable_channels=}")
         
         if len(usable_channels) == 1:
-             aux = corr.copy()
-            #print(f"{aux=}") 
+            aux = corr.copy()
+            #print(f"{aux=}")
             usable_channels = list(aux.sort_values(by='median', ascending = False).iloc[:3].index)
 
         
