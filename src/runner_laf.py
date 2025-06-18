@@ -23,9 +23,12 @@ def str_to_bool(value):
 
 
 parser = argparse.ArgumentParser(description="Run the Processor with given pickles_path and fill_number.")
-parser.add_argument("--path", 
+parser.add_argument("--plt_path", 
                     type=str,
-                    help="Path to the pickles directory.")
+                    help="Path to the PLT pickles directory.")
+parser.add_argument("--dt_path", 
+                    type=str,
+                    help="Path to the DT pickles directory.")
 parser.add_argument("--fill", 
                     type=int, 
                     help="Fill number to process.")
@@ -55,7 +58,8 @@ parser.add_argument("--out",
 args = parser.parse_args()
 
 
-pickles_path = args.path
+pickles_path_plt = args.plt_path
+pickles_path_dt = args.dt_path
 fill_number = args.fill
 #is_lumi = args.is_lumi
 year = args.year
@@ -66,7 +70,8 @@ output_path = args.out
 
 
 searcher = Processor()
-searcher(pickles_path = pickles_path, 
+searcher(pickles_path_plt = pickles_path_plt,
+         pickles_path_dt = pickles_path_dt,
          fill_number = fill_number, 
          year = year,
          corrs_path=corrs_path,
