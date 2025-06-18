@@ -103,7 +103,6 @@ class Processor:
                                                          nbx)
         rates_df_lin = self.linearize_channels(rates_df, linear_correction)
         rates_df_lin_origin = rates_df_lin.copy()
-        #rates_df_lin_dt = self.linearize_channels(rates_df, linear_correction_dt)
         
         #Compare ratio between plt and dt to get shifted channels
         ratio_dt_lin = self.compute_ratios_with_dt(rates_df_lin, df_dt)
@@ -114,8 +113,8 @@ class Processor:
         ratio_lin_origin = ratio_lin.copy()
 
         #Filter channels with low correlation ratio
-        correlation_threshold = -0.1
-        correlated_channels_lin, uncorrelated_channels_lin, corr_mtrx_lin  = self.filter_channels_by_ratio_correlation(ratio_lin, correlation_threshold)
+        correlated_channels_lin, uncorrelated_channels_lin, corr_mtrx_lin  = self.filter_channels_by_ratio_correlation(ratio_lin)
+        
         #Drop specific problematic channels ein 2023 and 2024
         if self.year in [2023, 2024]:
             for channel in [6, 8, 9]:
@@ -421,61 +420,6 @@ class Processor:
                 new_rates[chid] = rates_df[chid]
         new_rates.dropna()
         return new_rates
-        
-    def plot_results(self, 
-                     rates_df_original,
-                     rates_df,
-                     true_ratio,
-                     uncorrelated_channels, 
-                     bad_ratios):
-        """
-        Generates and saves a figure with three subplots comparing different stages 
-        of luminosity rate processing.
-    
-        Parameters
-        ----------
-        rates_df_original : pandas.DataFrame
-            DataFrame containing the original per-channel luminosity rates, unfiltered.
-            Each column represents a different detector channel.
-            
-        rates_df : pandas.DataFrame
-            DataFrame with luminosity rates after filtering or normalization.
-            Typically divided by the per-channel mean.
-    
-        true_ratio : pandas.DataFrame
-            DataFrame with the ratios between channels and a reference value 
-            (e.g., global mean), useful for assessing relative stability between channels.
-    
-        Returns
-        -------
-        None
-            This method does not return anything. It saves a plot to disk at the location specified by 
-            `self.save_path`, with the filename `fill_<fill_number>.png`.
-    
-        Notes
-        -----
-        - All subplots share the X-axis (time) and display the temporal evolution of each dataset.
-        - Uses the HEP (CMS) style for plot labeling.
-        """
-        fig, ax = plt.subplots(4, 1, figsize = (20, 19), sharex = True)
-
-        hep.cms.label("Work in progress", rlabel = f'Fill {self.fill_number} ({self.year}, 13.6 TeV)', data = True, ax = ax[0])
-        #ax[0].plot(rates_df_original, ".",  label = [f"ch {ch}" for ch in rates_df_original.columns])
-        ax[0].plot(rates_df, ".", label=[f"ch {ch}/ mean" for ch in rates_df.columns])
-        ax[1].plot(true_ratio, ".", label=[f"ch {ch} / mean" for ch in true_ratio.columns])
-        ax[2].plot(rates_df_original[uncorrelated_channels], ".",  label = [f"ch {ch}" for ch in uncorrelated_channels])
-        ax[3].plot(bad_ratios, '.', label = [f"ch {ch} / mean good channels" for ch in bad_ratios.columns])
-        ax[0].set_ylabel(r'Lumi filtered[$hz/\mu b$]')
-        ax[2].set_ylabel(r'Lumi N-T[$hz/\mu b$]')
-        ax[1].set_ylabel('Ratio [a.u.]')
-        ax[3].set_ylabel('Ratio N-T[a.u.]')
-        ax[3].set_xlabel('Time [$dd HH:MM$]')
-        #ax[1].set_xlabel(None)
-        ax[0].legend(loc = 'upper right', bbox_to_anchor=(1.15, 1), fontsize = 16)
-        ax[2].legend(loc = 'upper right', bbox_to_anchor=(1.10, 1), fontsize = 16)
-        #ax[3].legend(loc = 'upper right', bbox_to_anchor=(1.15, 1), fontsize = 16)
-        
-        plt.savefig(f"{self.save_path}/plots/fill_{self.fill_number}.png")
 
 
     def get_shifted_channels(self, ratio_dt: Any, 
@@ -669,7 +613,6 @@ class Processor:
         rates_df.set_index('time',
                            inplace = True)
         rates_df.index.name = None
-        #print(f"{rates_df.columns=}")
         rates_df.columns = [i for i in range(channels)]
         return rates_df, attrs["nbx"]
     
@@ -757,8 +700,7 @@ class Processor:
     
         return ratio
     
-    def filter_channels_by_ratio_correlation(self, ratio: pd.DataFrame,
-                                             threshold: float = 0.05) -> list:
+    def filter_channels_by_ratio_correlation(self, ratio: pd.DataFrame) -> list:
         """
         Filters channels based on their correlation with others, selecting those with a median 
         correlation above a threshold.
@@ -775,37 +717,21 @@ class Processor:
         corr['median'] = np.nanmedian(corr, axis = 1)
         corr['median'] = np.nanmedian(corr, axis = 1)
         
-        #if corr["median"].median() > 0.84:
-        #    threshold = 0.6
-        #elif corr["median"].median() > 0.7:
-        #    threshold = 0.3
-        #elif corr["median"].median() > 0.5:
-        #    threshold = 0.1
-        #else:
-        #    threshold = -0.1
-        #Set the threshold
         threshold = corr["median"].median() * 0.5
         
         usable_channels = list(corr[corr['median'] > threshold].index)
         non_usable_channels = list(corr[corr['median'] < threshold].index)
-        #print(f'{corr["median"].median()}')
-        #print()
-        #print(f"1.{usable_channels=}")
         
         for channel in ratio.columns:
-            #print(f"{channel=}, ratio={ratio[channel].mean()}, {ratio[channel].std()} ")
             if ratio[channel].mean() < 0.2 and channel in usable_channels:
                 usable_channels.remove(channel)
                 non_usable_channels.append(channel)
-        #print(f"2.{usable_channels=}")
         
-        if len(usable_channels) == 1:
+        if len(usable_channels) <= 3:
             aux = corr.copy()
-            #print(f"{aux=}")
             usable_channels = list(aux.sort_values(by='median', ascending = False).iloc[:3].index)
 
         
-        #print(f"3.{usable_channels=}")
         corr_index = corr.sort_values(by='median', ascending = False).index#()
         ratio_aux = ratio.loc[:,list(corr_index)]
         corr = ratio_aux.corr()
@@ -850,7 +776,6 @@ class Processor:
             df_A = df_plt.copy()
             df_B = df_dt.copy()
             
-            # Convertimos los índices a datetime64 para trabajar con searchsorted
             times_dt = df_B.index.to_numpy(dtype='datetime64[ns]')
             values_dt = df_B.iloc[:, 0].to_numpy()
             
