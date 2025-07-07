@@ -226,10 +226,10 @@ class Processor:
         axes[7].set_ylim(0, 1.5)
         
         #Set the labels of the axis
-        axes[0].set_ylabel(r'Lumi filtered[$hz/\mu b$]')
-        axes[4].set_ylabel(r'Lumi N-T[$hz/\mu b$]')
-        axes[2].set_ylabel('Ratio [a.u.]')
-        axes[6].set_ylabel('Ratio N-T[a.u.]')
+        axes[0].set_ylabel(r'Z.C. Rates filtered[$a.u.$]')
+        axes[4].set_ylabel(r'Z.C. Rates N-T[$a.u.$]')
+        axes[2].set_ylabel('Ratios [a.u.]')
+        axes[6].set_ylabel('Ratios N-T[a.u.]')
         axes[6].set_xlabel('Time [$dd HH:MM$]')
         axes[7].set_xlabel('Time [$dd HH:MM$]')
         
