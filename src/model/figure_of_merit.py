@@ -192,6 +192,19 @@ class Processor:
         
         # Creates small axes
         axes = []
+        
+        # Títulos generales de las columnas
+        fig.text(0.60, 0.95, 'Correlation', ha='center', fontsize=30)
+        fig.text(0.80, 0.95, 'Level Shifter', ha='center', fontsize=30)
+        
+        for row in range(4):
+            for col in range(2):
+                if not axes:
+                    ax = fig.add_subplot(gs[row, col + 1])
+                else:
+                    ax = fig.add_subplot(gs[row, col + 1])
+                axes.append(ax)
+        """
         for row in range(4):
             for col in range(2):
                 if not axes:
@@ -199,6 +212,7 @@ class Processor:
                 else:
                     ax = fig.add_subplot(gs[row, col + 1], sharex=axes[0])
                 axes.append(ax)
+                """
 
         #Set the layout of the plot
         hep.cms.label("WIP", rlabel = f'Fill {self.fill_number} ({self.year}, 13.6 TeV)', data = True, ax = axes[0])
@@ -226,12 +240,18 @@ class Processor:
         axes[7].set_ylim(0, 1.5)
         
         #Set the labels of the axis
-        axes[0].set_ylabel(r'Z.C. Rates filtered[$a.u.$]')
-        axes[4].set_ylabel(r'Z.C. Rates N-T[$a.u.$]')
-        axes[2].set_ylabel('Ratios [a.u.]')
-        axes[6].set_ylabel('Ratios N-T[a.u.]')
+        axes[0].set_ylabel(r'Lumi filtered[$hz/\mu b$]')
+        axes[4].set_ylabel(r'Lumi N-T[$hz/\mu b$]')
+        axes[2].set_ylabel('Ratio [a.u.]')
+        axes[6].set_ylabel('Ratio N-T[a.u.]')
         axes[6].set_xlabel('Time [$dd HH:MM$]')
         axes[7].set_xlabel('Time [$dd HH:MM$]')
+
+        #Rotation ticks
+        for eje in [6,7]:
+            for tick in axes[eje].get_xticklabels():
+                tick.set_rotation(30)
+        plt.setp(axes[0:6], xticklabels=[])
         
         #Set the legends
         axes[0].legend(loc = 'upper left', bbox_to_anchor=(-0.36, 1), fontsize = 16)
