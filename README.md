@@ -98,7 +98,7 @@ This tool requires pickle files output from [NonLinearity/poggers](https://gitla
 In order to use this tool, run the `runner_laf.py` like this:
 
 ```
-python runner_laf.py --path <path/to/the/pickle/files> --fill <number_of_the_fill_in_the_given_path> --year <year_of_the_fill> --out <output/path>
+python runner_laf.py --plt_path <path_to_the_plt_pickle_files> --dt_path <path_to_the_dt_pickle_files> --fill <fill_number> --year <year_of_the_fill>
 ```
 You can add an extra argument to read the `corrs_all.json` from the path you have it, otherways it will try to read it from `/afs/user/f/fromeo/public/4Tomas/corrs_all.json`
 
