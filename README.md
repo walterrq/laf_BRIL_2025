@@ -10,7 +10,7 @@ This tool is thought to be used with python 3.10.12 If this is not you python ve
 conda --version
 ```
 
-If you get something similar to `conda: command not found``, you don't have conda installed, and can proceed with the instalation of it.
+If you get something similar to `conda: command not found`, you don't have conda installed, and can proceed with the instalation of it. Also if you have conda but it's not installed in the `eos` space, is highly recommended you to reinstall it there, since the needed modules will end filling completely your available space at `afs`. 
 
 ### Conda instalation
 
@@ -100,6 +100,7 @@ In order to use this tool, run the `runner_laf.py` like this:
 ```
 python runner_laf.py --plt_path <path_to_the_plt_pickle_files> --dt_path <path_to_the_dt_pickle_files> --fill <fill_number> --year <year_of_the_fill>
 ```
-You can add an extra argument to read the `corrs_all.json` from the path you have it, otherways it will try to read it from `/afs/user/f/fromeo/public/4Tomas/corrs_all.json`
+
+You can also use the argument `--out` to set the output folder where the `restults` will be `stored.
 
 The output plot will be stored in the folder `src/results/<year>` with the fill number.
