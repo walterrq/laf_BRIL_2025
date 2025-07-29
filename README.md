@@ -80,7 +80,7 @@ conda activate .laf
 The tool is thought to be used at CERN lxplus at the `eos` space. Clone the repository by doing:
 
 ```
-git clone https://github.com/tomasate/laf_BRIL_2025.git laf
+git clone https://github.com/walterrq/laf_BRIL_2025.git laf
 ```
 
 Once you have cloned it cd into it and install the requirements
