@@ -1,0 +1,10 @@
+tqdm
+scipy
+numba
+numpy
+optuna
+pandas
+scikit-learn
+tables
+mplhep
+matplotlib
