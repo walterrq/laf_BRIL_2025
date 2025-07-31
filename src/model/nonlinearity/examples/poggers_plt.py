@@ -132,6 +132,9 @@ if __name__ == "__main__":
     lins = {ch: lins[ch] for ch in channels}
     svs = {ch: calibs[ch] for ch in channels}
 
+    all_results = []  # <- aquí se almacenarán todos los DataFrames
+
+    
     iterator = CentralIterator(
         args.central,
         args.beam_central,
@@ -140,6 +143,15 @@ if __name__ == "__main__":
     processor = MuProcessor(
         PLTAggExtension(svs, effs, lins),
         "/pltaggzero",
-        output_folder=args.output
+        output_folder=args.output,
+        all_results=all_results  # <- nuevo argumento
     )
     runner(iterator, processor)
+
+    # Combinar todos los resultados en un único DataFrame
+    if all_results:
+        final_df = pd.concat(all_results, ignore_index=True)
+        print(final_df)  # print df
+        final_df.to_csv(args.output / "merged_results.csv", index=False)
+        # final_df.to_csv("merged_results.csv", index=False)  # opcional
+        

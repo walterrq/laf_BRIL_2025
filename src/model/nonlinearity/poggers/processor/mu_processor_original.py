@@ -33,14 +33,13 @@ class MuProcessor(HD5Processor):
     node_path: str
     output_folder: Path
     beam_path: str = "/beam"
-    all_results: List[pd.DataFrame] = None  # <- nuevo campo
     
 
     def start(self):
         self.output_folder.mkdir(parents=True, exist_ok=True)
 
     def process_iteration(self, ctx: IterationContext):
-        output_file_path = self.output_folder / f"{ctx.fill}_{ctx.run}.pickle"
+        output_file_path = self.output_folder / f"{ctx.fill}_{ctx.run}.pickle" #Only sets the name of the output.
         if output_file_path.exists():
             print(f"Fill: {ctx.fill} Run: {ctx.run} already processed. Skipping.")
             return
@@ -87,12 +86,8 @@ class MuProcessor(HD5Processor):
                 }
             )
 
-            if self.all_results is not None:
-                self.all_results.append(result[0])
-            else:
-                csv_path = self.output_folder / f"{ctx.fill}_{ctx.run}.csv"
-                result[0].to_csv(csv_path, index=False)
-
+            with open(self.output_folder / f"{ctx.fill}_{ctx.run}.pickle", "wb") as fp:
+                pickle.dump(result, fp)
         else:
             print(f"Fill: {ctx.fill} Run: {ctx.run} no data found for '{self.node_path}'.")
 
