@@ -44,6 +44,7 @@ python-dateutil
 pytz
 pyyaml-env-tag
 pyyaml
+optuna
 recommonmark
 requests
 scikit-learn

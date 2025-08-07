@@ -98,7 +98,7 @@ This tool requires pickle files output from [NonLinearity/poggers](https://gitla
 In order to use this tool, run the `runner_laf.py` like this:
 
 ```
-python runner_laf.py --plt_path <path_to_the_plt_pickle_files> --dt_path <path_to_the_dt_pickle_files> --fill <fill_number> --year <year_of_the_fill>
+python examples/poggers_plt.py --central /eos/cms/store/group/dpg_bril/comm_bril/<year>/physics/ --beam-central /eos/cms/store/group/dpg_bril/comm_bril/2023/physics/ --fill 8873 --output <path_to_output_csv> --dt_path <path_to_the_dt_pickle_files_But_not_necesary> --year <year>
 ```
 
 You can also use the argument `--out` to set the output folder where the `restults` will be `stored.

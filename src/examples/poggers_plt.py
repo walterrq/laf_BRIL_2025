@@ -200,16 +200,13 @@ if __name__ == "__main__":
     if all_results:
         final_df = pd.concat(all_results, ignore_index=True)
         print(final_df)  # print df
-        final_df.to_csv(args.output / "merged_results.csv", index=False)
-        # final_df.to_csv("merged_results.csv", index=False)  # opcional
+        #Uncomment line below to have the merged dataframe stored in a csv file in the output directory
+        # final_df.to_csv(args.output / "merged_results.csv", index=False)
 
         #------start laf------
-        #pickles_path_plt = args.plt_path
         pickles_path_dt = args.dt_path
         fill_number = args.fill
-        ##is_lumi = args.is_lumi
         year = args.year
-        ##study_corr = args.study_corr
         corrs_path = args.corrs_path
         output_path = args.out
         
