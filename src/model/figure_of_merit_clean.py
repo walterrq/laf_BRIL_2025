@@ -640,14 +640,7 @@ class Processor:
         #                             detector,
         #                             agg_per_ls=True,
         #                             index_filter=(0.15,0.85))
-
-        rates_df = read_fill(plt_df, 
-                             self.fill_number, 
-                             detector,
-                             agg_per_ls=True,
-                             index_filter=(0.15,0.85))
-        
-        #rates_df = plt_df
+        rates_df = plt_df
         if detector == 'plt':
             channels = 16
         elif detector == 'dt':

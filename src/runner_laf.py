@@ -76,4 +76,3 @@ searcher(pickles_path_plt = pickles_path_plt,
          year = year,
          corrs_path=corrs_path,
          store_path = output_path)
-

@@ -37,3 +37,21 @@ def filter_scan_timestamps(df: pd.DataFrame, scan_timestamps: List[Tuple[int, in
     for start, end in scan_timestamps:
         filter_condition |= (df["time"] >= start) & (df["time"] <= end)
     return df[~filter_condition]
+
+def get_burnoff_timestamp(fill: int) -> int:
+    options = PoggerOptions()
+    burnoff_fill_path = (options.burnoff_path / f"{fill}.pkl").absolute()
+    if not burnoff_fill_path.exists():
+        print(f"No burnoff data founf for fill '{fill}' in '{options.burnoff_path.absolute().as_posix()}'. If this is not expected verify the 'burnoff_path' option is set to the correct value.")
+        return 0
+
+    data = pd.read_pickle(burnoff_fill_path)
+    timestamp: pd.Timestamp = data[
+        (data['cms_beta_star (cm)'] <= data['cms_beta_star (cm)'].min()) &
+        (data.atlas_lumi_leveling_type == 'NONE') &
+        (data.cms_lumi_leveling_type == 'NONE')
+    ]['UTC'].iloc[0]
+    return int(timestamp.timestamp())
+
+def get_only_burnoff(df: pd.DataFrame, burnoff_start: int) -> pd.DataFrame:
+    return df[df["time"] >= burnoff_start]

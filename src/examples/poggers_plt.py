@@ -28,19 +28,21 @@ import pandas as pd
 
 #laf requirements----------
 #import numpy as np
-from poggers.io import read_fill
 from typing import Any
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 #import os
 from pathlib import Path
-from model.preprocessor import DifferencePreprocessor
-from model.figure_of_merit import Processor
+# from model.preprocessor import DifferencePreprocessor
+# from model.figure_of_merit import Processor
 #import argparse
 #--------------------------
 
 sys.path.insert(0, os.path.abspath('.'))
+from model.preprocessor import DifferencePreprocessor
+from model.figure_of_merit import Processor
+from poggers.io import read_fill
 from poggers.iterator import CentralIterator
 from poggers.processor.mu_processor import MuProcessorExtension, MuProcessor
 from poggers.models import sub_nl
@@ -145,8 +147,8 @@ if __name__ == "__main__":
     parser.add_argument("--output", type=Path, help="Path to output.", default=Path("poggers_plt_example"))
     parser.add_argument("--corrections", type=Path, help="Path to per json channel alphas.", default=None)
     parser.add_argument("--calibrations", type=Path, help="Path to per json channel sigmas.", default=None)
-
-    #laf arguments
+    
+    # laf arguments
     parser.add_argument("--dt_path", 
                     type=str,
                     help="Path to the DT pickles directory.")
@@ -190,6 +192,10 @@ if __name__ == "__main__":
     )
     runner(iterator, processor)
 
+    print(all_results)
+
+    #sys.exit()
+
     # Combinar todos los resultados en un único DataFrame
     if all_results:
         final_df = pd.concat(all_results, ignore_index=True)
@@ -210,7 +216,7 @@ if __name__ == "__main__":
         searcher = Processor()
         searcher(pickles_path_dt = pickles_path_dt,
                  fill_number = fill_number, 
+                 plt_data=final_df,
                  year = year,
                  corrs_path=corrs_path,
                  store_path = output_path)
-        

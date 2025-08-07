@@ -10,7 +10,7 @@ from ._utils import get_only_burnoff, get_burnoff_timestamp
 
 
 def read_fill(
-    plt_df: pd.DataFrame,
+    path: Path,
     fill: int,
     name: str,
     agg_per_ls: bool = False,
@@ -18,33 +18,32 @@ def read_fill(
     remove_scans: bool = False,
     only_burnoff: bool = False,
     index_filter: Tuple[int, int] = (0, 1)
-) -> pd.DataFrame:
-    #files = path.glob(f"{fill}*.pickle")
+) -> Tuple[Dict[str, Any], pd.DataFrame]:
+    files = path.glob(f"{fill}*.pickle")
 
-    #dfs: List[pd.DataFrame] = []
-    # for file in files:
-    #     run = int(file.stem.split("_")[1])
-    #     with open(file, "rb") as fp:
-    #         data: Tuple[pd.DataFrame, Dict[str, Any]] = pickle.load(fp)
-    #         df, attrs = data
+    dfs: List[pd.DataFrame] = []
+    for file in files:
+        run = int(file.stem.split("_")[1])
+        with open(file, "rb") as fp:
+            data: Tuple[pd.DataFrame, Dict[str, Any]] = pickle.load(fp)
+            df, attrs = data
 
-        # if perform_ls_query:
-        #     df = df.query(attrs["ls_mask"])
+        if perform_ls_query:
+            df = df.query(attrs["ls_mask"])
 
-        # df.insert(0, "run", run)
-        # dfs.append(df)
+        df.insert(0, "run", run)
+        dfs.append(df)
 
-    # if not dfs:
-    #     raise Exception(f"No data found in {path} for fill {fill}.")
+    if not dfs:
+        raise Exception(f"No data found in {path} for fill {fill}.")
 
-    #result = pd.concat(dfs).sort_values(by=["run", "lsnum"]).reset_index(drop=True)
-    result = plt_df.sort_values(by=["run", "lsnum"]).reset_index(drop=True)
-    # attrs = {
-    #     "fill": fill,
-    #     "name": name,
-    #     "nbx": attrs["nbx"],
-    #     "bxmask": attrs["bxmask"],
-    # }
+    result = pd.concat(dfs).sort_values(by=["run", "lsnum"]).reset_index(drop=True)
+    attrs = {
+        "fill": fill,
+        "name": name,
+        "nbx": attrs["nbx"],  #no
+        "bxmask": attrs["bxmask"],  #no
+    }
     
     if remove_scans:
         result = filter_scan_timestamps(result, get_scan_timestamps(fill))
@@ -62,6 +61,5 @@ def read_fill(
     if agg_per_ls:
         result = result.groupby(["run", "lsnum"]).mean().reset_index()
 
-    # return attrs, result
-    return result
+    return attrs, result
     
